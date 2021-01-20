@@ -213,6 +213,7 @@ class DoubleBattle(AbstractBattle):
                             self._available_switches[pokemon_index].append(pokemon)
 
         self._sent_team = set(map(lambda x: self._team[x['ident']], side['pokemon']))
+        print('A')
 
     def _switch(self, pokemon, details, hp_status):
         pokemon_identifier = pokemon.split(":")[0][:3]
@@ -496,8 +497,6 @@ class DoubleBattle(AbstractBattle):
         else: return {0: -1, 1: -2}[i]
 
     # This is how we translate showdown targets pokemon to active pokemon returned from the Battle object
-<<<<<<< HEAD
-<<<<<<< HEAD
     def showdown_target_to_mon(self, i) -> Optional[Pokemon]:
         """
         :return: Given a showdown target, returns the mon in the battle
@@ -506,22 +505,3 @@ class DoubleBattle(AbstractBattle):
         mapping = {1: 0, 2: 1, -1: 0, -2: 1}
         if i < 0: return self.active_pokemon[mapping[i]]
         return self.opponent_active_pokemon[mapping[i]]
-=======
-    # TODO: change into get_mon_from_showdown_target
-    @staticmethod
-    def showdown_target_to_active_pokemon(i):
-=======
-    def showdown_target_to_mon(self, i) -> Optional[Pokemon]:
->>>>>>> Added Helper functions to facilitate AI, and adapted player to remove extraneous letters in health, which is a yet unsolved problem
-        """
-        :return: Given a showdown target, returns the mon in the battle
-        :rtype: int
-        """
-<<<<<<< HEAD
-        return {1: 0, 2: 1, -1: 0, -2: 1}[i]
->>>>>>> added bits and bobs... encountered an error
-=======
-        mapping = {1: 0, 2: 1, -1: 0, -2: 1}
-        if i < 0: return self.active_pokemon[mapping[i]]
-        return self.opponent_active_pokemon[mapping[i]]
->>>>>>> Added Helper functions to facilitate AI, and adapted player to remove extraneous letters in health, which is a yet unsolved problem
