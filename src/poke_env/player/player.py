@@ -637,31 +637,9 @@ class Player(PlayerNetwork, ABC):
         :return: Formatted move order
         :rtype: str
         """
-<<<<<<< HEAD
         return BattleOrder(
             order, actor=actor, mega=mega, move_target=move_target, z_move=z_move, dynamax=dynamax
-<<<<<<< HEAD
         ).message
-=======
-        )
-=======
-        if isinstance(order, Move):
-            if order.id == "recharge":
-                return "/choose move 1"
-            order = f"/choose move {order.id}"
-            if mega:
-                order += " mega"
-            elif z_move:
-                order += " zmove"
-            elif dynamax:
-                order += " dynamax"
-            if move_target != DoubleBattle.EMPTY_TARGET_POSITION:
-                order += f" {move_target}"
-            return order
-        else:
-            return f"/choose switch {order.species}"
->>>>>>> First commit of forked poke-env. Adapted and added some teampreview methods for VGC
->>>>>>> First commit of forked poke-env. Adapted and added some teampreview methods for VGC
 
     @property
     def battles(self) -> Dict[str, AbstractBattle]:
