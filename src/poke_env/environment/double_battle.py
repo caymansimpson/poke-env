@@ -213,6 +213,7 @@ class DoubleBattle(AbstractBattle):
                             self._available_switches[pokemon_index].append(pokemon)
 
         self._sent_team = set(map(lambda x: self._team[x['ident']], side['pokemon']))
+        print('A')
 
     def _switch(self, pokemon, details, hp_status):
         pokemon_identifier = pokemon.split(":")[0][:3]
