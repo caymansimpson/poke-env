@@ -382,13 +382,8 @@ class Player(PlayerNetwork, ABC):
         """
         return DefaultBattleOrder()
 
-<<<<<<< HEAD
-    # Get all Doubles Moves
     def get_all_doubles_moves(self, battle: DoubleBattle) -> BattleOrder:
-=======
-    def choose_random_doubles_move(self, battle: DoubleBattle) -> BattleOrder:
->>>>>>> Rebasing onto most recent
-        active_orders = [[], []]
+        orders = []
 
         for (
             idx,
@@ -749,33 +744,9 @@ class Player(PlayerNetwork, ABC):
         :return: Formatted move order
         :rtype: str
         """
-<<<<<<< HEAD
-<<<<<<< HEAD
         return BattleOrder(
             order, actor=actor, mega=mega, move_target=move_target, z_move=z_move, dynamax=dynamax
         )
-=======
-        if isinstance(order, Move):
-            if order.id == "recharge":
-                return "/choose move 1"
-            order = f"/choose move {order.id}"
-            if mega:
-                order += " mega"
-            elif z_move:
-                order += " zmove"
-            elif dynamax:
-                order += " dynamax"
-            if move_target != DoubleBattle.EMPTY_TARGET_POSITION:
-                order += f" {move_target}"
-            return order
-        else:
-            return f"/choose switch {order.species}"
->>>>>>> First commit of forked poke-env. Adapted and added some teampreview methods for VGC
-=======
-        return BattleOrder(
-            order, mega=mega, move_target=move_target, z_move=z_move, dynamax=dynamax
-        )
->>>>>>> Rebasing onto most recent
 
     @property
     def battles(self) -> Dict[str, AbstractBattle]:
