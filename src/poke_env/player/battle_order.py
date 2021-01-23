@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Optional, Union, List
 from poke_env.environment.double_battle import DoubleBattle
 from poke_env.environment.move import Move
 from poke_env.environment.pokemon import Pokemon
 
-
+# Represents an action
 @dataclass
 class BattleOrder:
-    order: Optional[Union[Move, Pokemon]]
+    order: Optional[Union[Move, Pokemon]] = None
+    actor: Optional[Pokemon] = None
     mega: bool = False
     z_move: bool = False
     dynamax: bool = False
+
+    # Represents the showdown target
     move_target: int = DoubleBattle.EMPTY_TARGET_POSITION
 
     DEFAULT_ORDER = "/choose default"
@@ -21,7 +24,7 @@ class BattleOrder:
 
     @property
     def message(self) -> str:
-        if isinstance(self.order, Move):
+        if self.is_move():
             if self.order.id == "recharge":  # pyre-ignore
                 return "/choose move 1"
 
@@ -39,6 +42,100 @@ class BattleOrder:
         else:
             return f"/choose switch {self.order.species}"  # pyre-ignore
 
+    def is_move(self) -> bool:
+        """
+        :return: Whether this action represents a move. If empty, will return False
+        :rtype: bool
+        """
+        return isinstance(self.order, Move)
+
+    def is_switch(self) -> bool:
+        """
+        :return: Whether this action represents a switch. If empty, will return False
+        :rtype: bool
+        """
+        return isinstance(self.order, Pokemon)
+
+    def is_empty(self) -> bool:
+        """
+        :return: Whether the Action has been set to anything, or is an empty action (default)
+        :rtype: bool
+        """
+        return not (self.order or self.actor)
+
+    # Returns list of showdown targets, and None if there are no other affected mons
+    @staticmethod
+    def get_affected_targets(battle, order) -> List[int]:
+        if not order.is_move: return None
+
+        potentials = []
+        if order.move_target == DoubleBattle.EMPTY_TARGET_POSITION:
+
+            # Add all pokemon who could be affected for moves like Surf or Earthquake
+            if order.order.move.deduced_target == 'allAdjacent':
+                for i, potential_mon in enumerate(battle.active_pokemon):
+                    if potential_mon is not None and mon != potential_mon: potentials.append(DoubleBattle.active_pokemon_to_showdown_target(i.move_target, opp=False))
+
+                for i, potential_mon in enumerate(battle.opponent_active_pokemon):
+                    if potential_mon is not None: potentials.append(DoubleBattle.active_pokemon_to_showdown_target(i, opp=True))
+
+            # For moves like Heatwave that affect all opponents, ensure that we list all potential affected opponents
+            elif move.deduced_target in ['foeSide', 'allAdjacentFoes']:
+                for i, potential_mon in enumerate(battle.opponent_active_pokemon):
+                    if potential_mon: potentials.append(DoubleBattle.active_pokemon_to_showdown_target(i, opp=True))
+
+            # For moves that affect our side of the field
+            elif move.deduced_target in ['allies', 'allySide', 'allyTeam']:
+                for i, potential_mon in enumerate(battle.active_pokemon):
+                    if potential_mon and mon != potential_mon: potentials.append(DoubleBattle.active_pokemon_to_showdown_target(i, opp=True))
+
+            # For moves that don't have targets (like self-moves)
+            else:
+                return None
+
+        else:
+            # If this is a one-target move, and there is one pokemon left, technically both opponent targets work in Showdown, since there's only one valid
+            # target. For our purposes, we only want to return the right target (where the mon is) so that we can retrieve the mon later without hassle
+            if (battle.active_pokemon if order.move_target < 0 else battle.opponent_active_pokemon)[DoubleBattle.showdown_target_to_active_pokemon(order.move_target)]:
+                potentials.append(order.move_target)
+            elif order.move_target < 0:
+
+                print("Order:")
+                print("\tActor:  ", order.actor)
+                print("\tOrder:  ", order.order)
+                print("\tDynamax: ", order.dynamax)
+                print("\tTarget: ", order.move_target)
+
+                print("My mons: ", battle.active_pokemon)
+                print("Opp mons:", battle.opponent_active_pokemon)
+
+                print("Side Conditions:", battle.side_conditions)
+                print("Fields:         ", battle.fields)
+                print("Weather:        ", battle.weather)
+
+                print()
+
+
+                raise("get_affefcted_targets has been given an invalid order where we're targeting an ally... but there's no ally...?")
+            else:
+                print("Order:")
+                print("\tActor:  ", order.actor)
+                print("\tOrder:  ", order.order)
+                print("\tDynamax: ", order.dynamax)
+                print("\tTarget: ", order.move_target)
+
+                print("My mons: ", battle.active_pokemon)
+                print("Opp mons:", battle.opponent_active_pokemon)
+
+                print("Side Conditions:", battle.side_conditions)
+                print("Fields:         ", battle.fields)
+                print("Weather:        ", battle.weather)
+
+                print()
+                raise("targeting an empty slot with a one mon move... though its on the opponents side")
+                return potentials.append(3 - order.move_target) # Switch 2 and 1
+
+        return potentials
 
 class DefaultBattleOrder(BattleOrder):
     def __init__(self, *args, **kwargs):
@@ -48,16 +145,16 @@ class DefaultBattleOrder(BattleOrder):
     def message(self) -> str:
         return self.DEFAULT_ORDER
 
-
+# This is equivalent to an "action" that will move us to the next state
 @dataclass
 class DoubleBattleOrder(BattleOrder):
-    def __init__(
-        self,
-        first_order: Optional[BattleOrder] = None,
-        second_order: Optional[BattleOrder] = None,
-    ):
-        self.first_order = first_order
-        self.second_order = second_order
+    first_order: Optional[BattleOrder] = None
+    second_order: Optional[BattleOrder] = None
+
+    def __str__(self) -> str:
+        first_actor = self.first_order.actor if self.first_order.actor else "None"
+        second_actor = self.second_order.actor if self.second_order.actor else "None"
+        return f"'{self.message}' by {first_actor}, {second_actor}"
 
     @property
     def message(self) -> str:
@@ -73,6 +170,37 @@ class DoubleBattleOrder(BattleOrder):
             return self.second_order.message + ", default"
         else:
             return self.DEFAULT_ORDER
+
+    @staticmethod
+    def is_valid(battle, double_order):
+        # print()
+        # if isinstance(double_order.first_order, DefaultBattleOrder): print('firstorder: defualt')
+        # else: print('firstorder: ' + str(double_order.first_order))
+        # if isinstance(double_order.second_order, DefaultBattleOrder): print('secondorder: defualt')
+        # else: print('secondorder: ' + str(double_order.second_order))
+
+        print()
+        # print(type(double_order).__name__)
+        print(str(double_order))
+
+        # If the invalidity is the relationship between the two orders
+        if double_order.first_order and double_order.second_order:
+            if double_order.first_order.mega and double_order.second_order.mega: return False
+            if double_order.first_order.z_move and double_order.second_order.z_move: return False
+            if double_order.first_order.dynamax and double_order.second_order.dynamax: return False
+            if double_order.first_order.order == double_order.second_order.order and double_order.first_order.is_switch() and double_order.second_order.is_switch(): return False
+
+        for order in [double_order.first_order, double_order.second_order]:
+
+            # you cant target a mon that isnt there (if the move targets a specific mon)
+            if order and order.is_move() and order.move_target != 0:
+                if not (battle.active_pokemon if order.move_target < 0 else battle.opponent_active_pokemon)[DoubleBattle.showdown_target_to_active_pokemon(order.move_target)]: return False
+
+            if order and order.is_move() and order.actor and (order.actor.is_dynamaxed or order.dynamax):
+                if order.move_target < 0: return False # Can't self-target for dynamax
+                if (order.order.damage or order.order.base_power > 0) and order.move_target <= 0: return False # Dynamax moves need a target since theyre single target even if normally spread
+
+        return True
 
     @staticmethod
     def join_orders(first_orders, second_orders):
