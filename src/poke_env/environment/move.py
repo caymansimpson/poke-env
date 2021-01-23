@@ -192,6 +192,14 @@ class Move:
         return self.category
 
     @property
+    def does_damage(self) -> bool:
+        """
+        :return: Whether the move does damage (e.g. if it isn't affected by tant)
+        :rtype: bool
+        """
+        return self.base_power > 0 or self.damage
+
+    @property
     def drain(self) -> float:
         """
         :return: Ratio of HP of inflicted damages, between 0 and 1.
