@@ -213,7 +213,6 @@ class DoubleBattle(AbstractBattle):
                             self._available_switches[pokemon_index].append(pokemon)
 
         self._sent_team = set(map(lambda x: self._team[x['ident']], side['pokemon']))
-        print('A')
 
     def _switch(self, pokemon, details, hp_status):
         pokemon_identifier = pokemon.split(":")[0][:3]
@@ -477,3 +476,23 @@ class DoubleBattle(AbstractBattle):
     @trapped.setter
     def trapped(self, value: List[bool]):
         self._trapped = value
+
+    # This is how we translate active pokemon to showdown targets returned from the Battle object
+    @staticmethod
+    def active_pokemon_to_showdown_target(i, opp=False):
+        """
+        :return: Given an index of the mon in active_pokemon or opponent_active_pokemon, returns the showdown int that we need to give for a showdown action
+        :rtype: int
+        """
+        if opp: return {0: 1, 1: 2}[i]
+        else: return {0: -1, 1: -2}[i]
+
+    # This is how we translate showdown targets pokemon to active pokemon returned from the Battle object
+    # TODO: change into get_mon_from_showdown_target
+    @staticmethod
+    def showdown_target_to_active_pokemon(i):
+        """
+        :return: Given a showdown target, returns the index that the pokemon is in active_pokemon or opponent_active_pokemon
+        :rtype: int
+        """
+        return {1: 0, 2: 1, -1: 0, -2: 1}[i]
