@@ -72,20 +72,21 @@ class BattleOrder:
         if order.move_target == DoubleBattle.EMPTY_TARGET_POSITION:
 
             # Add all pokemon who could be affected for moves like Surf or Earthquake
-            if order.order.move.deduced_target == 'allAdjacent':
+            if order.order.deduced_target == 'allAdjacent':
                 for i, potential_mon in enumerate(battle.active_pokemon):
-                    if potential_mon is not None and mon != potential_mon: potentials.append(DoubleBattle.active_pokemon_to_showdown_target(i.move_target, opp=False))
+                    if potential_mon is not None and order.actor != potential_mon:
+                        potentials.append(DoubleBattle.active_pokemon_to_showdown_target(i, opp=False))
 
                 for i, potential_mon in enumerate(battle.opponent_active_pokemon):
                     if potential_mon is not None: potentials.append(DoubleBattle.active_pokemon_to_showdown_target(i, opp=True))
 
             # For moves like Heatwave that affect all opponents, ensure that we list all potential affected opponents
-            elif move.deduced_target in ['foeSide', 'allAdjacentFoes']:
+            elif order.order.deduced_target in ['foeSide', 'allAdjacentFoes']:
                 for i, potential_mon in enumerate(battle.opponent_active_pokemon):
                     if potential_mon: potentials.append(DoubleBattle.active_pokemon_to_showdown_target(i, opp=True))
 
             # For moves that affect our side of the field
-            elif move.deduced_target in ['allies', 'allySide', 'allyTeam']:
+            elif order.order.deduced_target in ['allies', 'allySide', 'allyTeam']:
                 for i, potential_mon in enumerate(battle.active_pokemon):
                     if potential_mon and mon != potential_mon: potentials.append(DoubleBattle.active_pokemon_to_showdown_target(i, opp=True))
 
@@ -96,50 +97,27 @@ class BattleOrder:
         else:
             # If this is a one-target move, and there is one pokemon left, technically both opponent targets work in Showdown, since there's only one valid
             # target. For our purposes, we only want to return the right target (where the mon is) so that we can retrieve the mon later without hassle
-            if (battle.active_pokemon if order.move_target < 0 else battle.opponent_active_pokemon)[DoubleBattle.showdown_target_to_active_pokemon(order.move_target)]:
+            if battle.showdown_target_to_mon(order.move_target):
                 potentials.append(order.move_target)
             elif order.move_target < 0:
-
-                print("Order:")
-                print("\tActor:  ", order.actor)
-                print("\tOrder:  ", order.order)
-                print("\tDynamax: ", order.dynamax)
-                print("\tTarget: ", order.move_target)
-
-                print("My mons: ", battle.active_pokemon)
-                print("Opp mons:", battle.opponent_active_pokemon)
-
-                print("Side Conditions:", battle.side_conditions)
-                print("Fields:         ", battle.fields)
-                print("Weather:        ", battle.weather)
-
-                print()
-
-
                 raise("get_affefcted_targets has been given an invalid order where we're targeting an ally... but there's no ally...?")
             else:
-                print("Order:")
-                print("\tActor:  ", order.actor)
-                print("\tOrder:  ", order.order)
-                print("\tDynamax: ", order.dynamax)
-                print("\tTarget: ", order.move_target)
-
-                print("My mons: ", battle.active_pokemon)
-                print("Opp mons:", battle.opponent_active_pokemon)
-
-                print("Side Conditions:", battle.side_conditions)
-                print("Fields:         ", battle.fields)
-                print("Weather:        ", battle.weather)
-
-                print()
                 raise("targeting an empty slot with a one mon move... though its on the opponents side")
-                return potentials.append(3 - order.move_target) # Switch 2 and 1
 
         return potentials
 
 class DefaultBattleOrder(BattleOrder):
     def __init__(self, *args, **kwargs):
         pass
+
+    @property
+    def message(self) -> str:
+        return self.DEFAULT_ORDER
+
+@dataclass
+class DefaultDoubleBattleOrder(BattleOrder):
+    first_order: Optional[BattleOrder] = None
+    second_order: Optional[BattleOrder] = None
 
     @property
     def message(self) -> str:
@@ -152,8 +130,8 @@ class DoubleBattleOrder(BattleOrder):
     second_order: Optional[BattleOrder] = None
 
     def __str__(self) -> str:
-        first_actor = self.first_order.actor if self.first_order.actor else "None"
-        second_actor = self.second_order.actor if self.second_order.actor else "None"
+        first_actor = self.first_order.actor if self.first_order and self.first_order.actor else "None"
+        second_actor = self.second_order.actor if self.second_order and self.second_order.actor else "None"
         return f"'{self.message}' by {first_actor}, {second_actor}"
 
     @property
@@ -173,15 +151,6 @@ class DoubleBattleOrder(BattleOrder):
 
     @staticmethod
     def is_valid(battle, double_order):
-        # print()
-        # if isinstance(double_order.first_order, DefaultBattleOrder): print('firstorder: defualt')
-        # else: print('firstorder: ' + str(double_order.first_order))
-        # if isinstance(double_order.second_order, DefaultBattleOrder): print('secondorder: defualt')
-        # else: print('secondorder: ' + str(double_order.second_order))
-
-        print()
-        # print(type(double_order).__name__)
-        print(str(double_order))
 
         # If the invalidity is the relationship between the two orders
         if double_order.first_order and double_order.second_order:
@@ -194,7 +163,7 @@ class DoubleBattleOrder(BattleOrder):
 
             # you cant target a mon that isnt there (if the move targets a specific mon)
             if order and order.is_move() and order.move_target != 0:
-                if not (battle.active_pokemon if order.move_target < 0 else battle.opponent_active_pokemon)[DoubleBattle.showdown_target_to_active_pokemon(order.move_target)]: return False
+                if not battle.showdown_target_to_mon(order.move_target): return False
 
             if order and order.is_move() and order.actor and (order.actor.is_dynamaxed or order.dynamax):
                 if order.move_target < 0: return False # Can't self-target for dynamax
@@ -220,4 +189,4 @@ class DoubleBattleOrder(BattleOrder):
             return [DoubleBattleOrder(first_order=order) for order in first_orders]
         elif second_orders:
             return [DoubleBattleOrder(first_order=order) for order in second_orders]
-        return [DefaultBattleOrder()]
+        return [DefaultDoubleBattleOrder()]
