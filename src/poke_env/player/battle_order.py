@@ -119,9 +119,12 @@ class DefaultDoubleBattleOrder(BattleOrder):
     first_order: Optional[BattleOrder] = None
     second_order: Optional[BattleOrder] = None
 
+<<<<<<< HEAD
     def __str__(self) -> str:
         return f"'{self.message}'"
 
+=======
+>>>>>>> Added Helper functions to facilitate AI, and adapted player to remove extraneous letters in health, which is a yet unsolved problem
     @property
     def message(self) -> str:
         return self.DEFAULT_ORDER
@@ -154,6 +157,7 @@ class DoubleBattleOrder(BattleOrder):
 
     @staticmethod
     def is_valid(battle, double_order):
+<<<<<<< HEAD
 
         # Ensure that the corresponding mon has the move
         if double_order.first_order and battle.active_pokemon[0] and double_order.first_order.order not in battle.available_moves[0]: return False
@@ -176,6 +180,8 @@ class DoubleBattleOrder(BattleOrder):
 
         # If we have two orders for one mon
         elif double_order.first_order and double_order.second_order and not all(battle.active_pokemon): return False
+=======
+>>>>>>> Added Helper functions to facilitate AI, and adapted player to remove extraneous letters in health, which is a yet unsolved problem
 
         # If the invalidity is the relationship between the two orders
         elif double_order.first_order and double_order.second_order:
