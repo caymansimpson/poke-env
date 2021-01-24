@@ -155,6 +155,7 @@ class DoubleBattleOrder(BattleOrder):
     @staticmethod
     def is_valid(battle, double_order):
 <<<<<<< HEAD
+<<<<<<< HEAD
 
         # Ensure that the corresponding mon has the move
         if double_order.first_order and battle.active_pokemon[0] and double_order.first_order.order not in battle.available_moves[0]: return False
@@ -190,6 +191,8 @@ class DoubleBattleOrder(BattleOrder):
         print()
         # print(type(double_order).__name__)
         print(str(double_order))
+=======
+>>>>>>> Added Helper functions to facilitate AI, and adapted player to remove extraneous letters in health, which is a yet unsolved problem
 
         # If the invalidity is the relationship between the two orders
         if double_order.first_order and double_order.second_order:
@@ -204,10 +207,14 @@ class DoubleBattleOrder(BattleOrder):
             # you cant target a mon that isnt there (if the move targets a specific mon)
             if order and order.is_move() and order.move_target != 0:
 <<<<<<< HEAD
+<<<<<<< HEAD
                 if not battle.showdown_target_to_mon(order.move_target): return False
 =======
                 if not (battle.active_pokemon if order.move_target < 0 else battle.opponent_active_pokemon)[DoubleBattle.showdown_target_to_active_pokemon(order.move_target)]: return False
 >>>>>>> added bits and bobs... encountered an error
+=======
+                if not battle.showdown_target_to_mon(order.move_target): return False
+>>>>>>> Added Helper functions to facilitate AI, and adapted player to remove extraneous letters in health, which is a yet unsolved problem
 
             if order and order.is_move() and order.actor and (order.actor.is_dynamaxed or order.dynamax):
                 if order.move_target < 0: return False # Can't self-target for dynamax

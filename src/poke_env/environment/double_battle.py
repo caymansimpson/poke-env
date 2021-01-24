@@ -497,6 +497,7 @@ class DoubleBattle(AbstractBattle):
 
     # This is how we translate showdown targets pokemon to active pokemon returned from the Battle object
 <<<<<<< HEAD
+<<<<<<< HEAD
     def showdown_target_to_mon(self, i) -> Optional[Pokemon]:
         """
         :return: Given a showdown target, returns the mon in the battle
@@ -509,9 +510,18 @@ class DoubleBattle(AbstractBattle):
     # TODO: change into get_mon_from_showdown_target
     @staticmethod
     def showdown_target_to_active_pokemon(i):
+=======
+    def showdown_target_to_mon(self, i) -> Optional[Pokemon]:
+>>>>>>> Added Helper functions to facilitate AI, and adapted player to remove extraneous letters in health, which is a yet unsolved problem
         """
-        :return: Given a showdown target, returns the index that the pokemon is in active_pokemon or opponent_active_pokemon
+        :return: Given a showdown target, returns the mon in the battle
         :rtype: int
         """
+<<<<<<< HEAD
         return {1: 0, 2: 1, -1: 0, -2: 1}[i]
 >>>>>>> added bits and bobs... encountered an error
+=======
+        mapping = {1: 0, 2: 1, -1: 0, -2: 1}
+        if i < 0: return self.active_pokemon[mapping[i]]
+        return self.opponent_active_pokemon[mapping[i]]
+>>>>>>> Added Helper functions to facilitate AI, and adapted player to remove extraneous letters in health, which is a yet unsolved problem
