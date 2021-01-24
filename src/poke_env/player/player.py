@@ -437,13 +437,13 @@ class Player(PlayerNetwork, ABC):
                         [
                             BattleOrder(move, actor=mon, move_target=target, dynamax=True)
                             for move in moves
-                            for target in targets[move]
+                            for target in battle.get_possible_showdown_targets(move, mon, dynamax=True)
                         ]
                     )
 
                 if sum(battle.force_switch) == 1:
                     if orders:
-                        return orders
+                        return list(map(lambda x: DoubleBattleOrder(first_order=x, second_order=None), orders))
                     return None
 
         return DoubleBattleOrder.join_orders(*active_orders)
