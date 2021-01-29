@@ -119,6 +119,9 @@ class DefaultDoubleBattleOrder(BattleOrder):
     first_order: Optional[BattleOrder] = None
     second_order: Optional[BattleOrder] = None
 
+    def __str__(self) -> str:
+        return f"'{self.message}'"
+
     @property
     def message(self) -> str:
         return self.DEFAULT_ORDER
@@ -152,8 +155,30 @@ class DoubleBattleOrder(BattleOrder):
     @staticmethod
     def is_valid(battle, double_order):
 
+        # Ensure that the corresponding mon has the move
+        if double_order.first_order and battle.active_pokemon[0] and double_order.first_order.order not in battle.available_moves[0]: return False
+        if double_order.second_order and battle.active_pokemon[1] and double_order.second_order.order not in battle.available_moves[1]: return False
+
+        if double_order.first_order and double_order.first_order.dynamax and battle.can_dynamax[0]: return False
+        if double_order.second_order and double_order.second_order.dynamax and battle.can_dynamax[1]: return False
+
+        if double_order.first_order and double_order.first_order.actor and double_order.first_order.actor.is_dynamaxed and double_order.first_order.dynamax : return False
+        if double_order.second_order and double_order.second_order.actor and double_order.second_order.actor.is_dynamaxed and double_order.second_order.dynamax: return False
+
+        # Should return two switches if there are two switches requested
+        if all(battle.force_switch):
+            return double_order.first_order and double_order.second_order and double_order.first_order.is_switch() and double_order.second_order.is_switch()
+
+        # Should only return one switch if one switch is requested
+        elif any(battle.force_switch):
+            orders = [double_order.first_order, double_order.second_order]
+            return sum(map(lambda x: 1 if x and x.is_switch() else 0, orders)) == 1 and sum(map(lambda x: 1 if x and x.is_move() else 0, orders)) == 0
+
+        # If we have two orders for one mon
+        elif double_order.first_order and double_order.second_order and not all(battle.active_pokemon): return False
+
         # If the invalidity is the relationship between the two orders
-        if double_order.first_order and double_order.second_order:
+        elif double_order.first_order and double_order.second_order:
             if double_order.first_order.mega and double_order.second_order.mega: return False
             if double_order.first_order.z_move and double_order.second_order.z_move: return False
             if double_order.first_order.dynamax and double_order.second_order.dynamax: return False
