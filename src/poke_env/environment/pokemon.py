@@ -265,7 +265,7 @@ class Pokemon:
         hp = "".join([c for c in hp if c in "0123456789/"]).split("/")
         self._current_hp, self._max_hp = hp
         self._current_hp = int(self._current_hp)
-        self._max_hp = int(self._max_hp if self._max_hp.isnumeric() else self.max_hp[:-1]) # replaces words at the end
+        self._max_hp = int(self._max_hp)
 
     def _start_effect(self, effect):
         effect = Effect.from_showdown_message(effect)
