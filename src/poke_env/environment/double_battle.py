@@ -380,7 +380,7 @@ class DoubleBattle(AbstractBattle):
     @property
     def can_dynamax(self) -> List[bool]:
         """
-        :return: Wheter of not the current active pokemon can dynamax
+        :return: Wheter or not the current active pokemon can dynamax
         :rtype: List[bool]
         """
         return self._can_dynamax

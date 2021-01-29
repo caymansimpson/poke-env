@@ -616,7 +616,7 @@ class Player(PlayerNetwork, ABC):
     @staticmethod
     def create_order(
         order: Union[Move, Pokemon],
-        actor: Optional[Pokemon],
+        actor: Optional[Pokemon] = None,
         mega: bool = False,
         z_move: bool = False,
         dynamax: bool = False,
