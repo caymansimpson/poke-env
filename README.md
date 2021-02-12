@@ -89,3 +89,8 @@ Data files are adapted version of the `js` data files of [Pokemon Showdown](http
 [![CircleCI](https://circleci.com/gh/hsahovic/poke-env.svg?style=svg)](https://circleci.com/gh/hsahovic/poke-env)
 [![codecov](https://codecov.io/gh/hsahovic/poke-env/branch/master/graph/badge.svg)](https://codecov.io/gh/hsahovic/poke-env)
 <a href="https://github.com/ambv/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+
+To update to @Hsahovic's version, run the following commands:
+`git fetch upstream`
+`git checkout master`
+`git rebase upstream/master`
