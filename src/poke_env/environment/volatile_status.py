@@ -56,7 +56,7 @@ class VolatileStatus(Enum):
     SMACK_DOWN = auto()
     SNATCH = auto()
     SPIKY_SHIELD = auto()
-    SPOTLIGHT = a
+    SPOTLIGHT = auto()
     STOCKPILE = auto()
     SUBSTITUTE = auto()
     TARSHOT = auto()
