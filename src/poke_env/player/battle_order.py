@@ -152,47 +152,99 @@ class DoubleBattleOrder(BattleOrder):
         else:
             return self.DEFAULT_ORDER
 
+    # TODO: make this more efficient
     @staticmethod
-    def is_valid(battle, double_order):
+    def is_valid(battle, double_order, v=None):
 
-        # Ensure that the corresponding mon has the move
-        if double_order.first_order and battle.active_pokemon[0] and double_order.first_order.order not in battle.available_moves[0]: return False
-        if double_order.second_order and battle.active_pokemon[1] and double_order.second_order.order not in battle.available_moves[1]: return False
+        if battle.active_pokemon[0] and not double_order.first_order:
+            if v: print("Error: First Pokemon exists and we didn't send an order for it")
+            return False
 
-        if double_order.first_order and double_order.first_order.dynamax and battle.can_dynamax[0]: return False
-        if double_order.second_order and double_order.second_order.dynamax and battle.can_dynamax[1]: return False
+        if not battle.active_pokemon[0] and double_order.first_order:
+            if v: print("Error: First Pokemon doesn't exists and we sent an order for it")
+            return False
 
-        if double_order.first_order and double_order.first_order.actor and double_order.first_order.actor.is_dynamaxed and double_order.first_order.dynamax : return False
-        if double_order.second_order and double_order.second_order.actor and double_order.second_order.actor.is_dynamaxed and double_order.second_order.dynamax: return False
+        if battle.active_pokemon[1] and not double_order.second_order:
+            if v: print("Error: Second Pokemon exists and we didn't send an order for it")
+            return False
 
-        # Should return two switches if there are two switches requested
+        if not battle.active_pokemon[1] and double_order.second_order:
+            if v: print("Error: Second Pokemon doesn't exists and we sent an order for it")
+            return False
+
+        if double_order.first_order and battle.active_pokemon[0] and double_order.first_order.is_move() and double_order.first_order.order not in battle.available_moves[0]:
+            if v: print("ERROR: First Pokemon doesn't have the requested move available to use")
+            return False
+
+        if double_order.second_order and battle.active_pokemon[1] and double_order.second_order.is_move() and double_order.second_order.order not in battle.available_moves[1]:
+            if v: print("ERROR: Second Pokemon doesn't have the requested move available to use")
+            return False
+
+        if double_order.first_order and double_order.first_order.dynamax and not battle.can_dynamax[0]:
+            if v: print("ERROR: First Pokemon can't Dynamax")
+            return False
+
+        if double_order.second_order and double_order.second_order.dynamax and not battle.can_dynamax[1]:
+            if v: print("ERROR: Second Pokemon can't Dynamax")
+            return False
+
+        if double_order.first_order and double_order.first_order.actor and double_order.first_order.actor.is_dynamaxed and double_order.first_order.dynamax:
+            if v: print("ERROR: First Pokemon is already Dynamax")
+            return False
+
+        if double_order.second_order and double_order.second_order.actor and double_order.second_order.actor.is_dynamaxed and double_order.second_order.dynamax:
+            if v: print("ERROR: Second Pokemon is already Dynamax")
+            return False
+
         if all(battle.force_switch):
-            return double_order.first_order and double_order.second_order and double_order.first_order.is_switch() and double_order.second_order.is_switch()
+            if not (double_order.first_order and double_order.second_order and double_order.first_order.is_switch() and double_order.second_order.is_switch()):
+                if v: print("ERROR: Two Switches Requested, but <2 returned")
+                return False
 
-        # Should only return one switch if one switch is requested
         elif any(battle.force_switch):
-            orders = [double_order.first_order, double_order.second_order]
-            return sum(map(lambda x: 1 if x and x.is_switch() else 0, orders)) == 1 and sum(map(lambda x: 1 if x and x.is_move() else 0, orders)) == 0
+            if not((double_order.first_order and double_order.first_order.is_switch() and not double_order.second_order) or (not double_order.first_order and double_order.second_order and double_order.second_order.is_switch())):
+                if v: print("ERROR: One switch requested, and != 1 returned")
+                return False
 
-        # If we have two orders for one mon
-        elif double_order.first_order and double_order.second_order and not all(battle.active_pokemon): return False
+        elif double_order.first_order and double_order.second_order and not all(battle.active_pokemon):
+            if v: print("ERROR: Two Moves requested, but only one active mon")
+            return False
 
-        # If the invalidity is the relationship between the two orders
         elif double_order.first_order and double_order.second_order:
-            if double_order.first_order.mega and double_order.second_order.mega: return False
-            if double_order.first_order.z_move and double_order.second_order.z_move: return False
-            if double_order.first_order.dynamax and double_order.second_order.dynamax: return False
-            if double_order.first_order.order == double_order.second_order.order and double_order.first_order.is_switch() and double_order.second_order.is_switch(): return False
+            if double_order.first_order.mega and double_order.second_order.mega:
+                if v: print("ERROR: Two Mega evolutions attempted")
+                return False
+            if double_order.first_order.z_move and double_order.second_order.z_move:
+                if v: print("ERROR: Two Z-Moves attempted")
+                return False
+            if double_order.first_order.dynamax and double_order.second_order.dynamax:
+                if v: print("ERROR: Two Dynamaxes attempted")
+                return False
+            if double_order.first_order.order == double_order.second_order.order and double_order.first_order.is_switch() and double_order.second_order.is_switch():
+                if v: print("ERROR: Two Switches Requested to the same Pokemon")
+                return False
 
-        for order in [double_order.first_order, double_order.second_order]:
+        # Iterate through orders for the errors that could happen within a single order
+        for i, order in enumerate([double_order.first_order, double_order.second_order]):
 
-            # you cant target a mon that isnt there (if the move targets a specific mon)
+            if order and order.is_switch() and battle.trapped[i]:
+                if v: print(f"ERROR:  {i}th Pokemon requested to Switch, but it's trapped")
+                return False
+
             if order and order.is_move() and order.move_target != 0:
-                if not battle.showdown_target_to_mon(order.move_target): return False
+                if not battle.showdown_target_to_mon(order.move_target):
+                    if v: print(f"ERROR: i{th} Pokemon tried to target a Pokemon that doesn't exist")
+                    return False
 
             if order and order.is_move() and order.actor and (order.actor.is_dynamaxed or order.dynamax):
-                if order.move_target < 0: return False # Can't self-target for dynamax
-                if (order.order.damage or order.order.base_power > 0) and order.move_target <= 0: return False # Dynamax moves need a target since theyre single target even if normally spread
+
+                if order.move_target < 0:
+                    if v: print(f"ERROR: {i}th Pokemon can't target your own Pokemon when dynamaxed")
+                    return False
+
+                if (order.order.damage or order.order.base_power > 0) and order.move_target <= 0:
+                    if v: print(f"ERROR: {i}th Pokemon has to choose a target for damaging moves when dynamaxed")
+                    return False
 
         return True
 
