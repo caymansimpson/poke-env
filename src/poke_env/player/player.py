@@ -383,7 +383,11 @@ class Player(PlayerNetwork, ABC):
         return DefaultBattleOrder()
 
     def get_all_doubles_moves(self, battle: DoubleBattle) -> BattleOrder:
+<<<<<<< HEAD
         orders = []
+=======
+        active_orders = [[], []]
+>>>>>>> b123588bed86cf561658120e925c58f2c1a12b53
 
         for (
             idx,
@@ -448,6 +452,7 @@ class Player(PlayerNetwork, ABC):
 
         return DoubleBattleOrder.join_orders(*active_orders)
 
+<<<<<<< HEAD
     def choose_random_doubles_move(self, battle: DoubleBattle) -> str:
         available_orders = []
         available_z_moves = set()
@@ -561,6 +566,12 @@ class Player(PlayerNetwork, ABC):
                 else:
                     order += ",default"
                 return order
+=======
+
+    def choose_random_doubles_move(self, battle: DoubleBattle) -> DoubleBattleOrder:
+
+        orders = self.get_all_doubles_moves(battle)
+>>>>>>> b123588bed86cf561658120e925c58f2c1a12b53
 
         return "/choose default"
 

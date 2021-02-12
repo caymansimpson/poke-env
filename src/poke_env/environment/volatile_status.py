@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""This module defines the SideCondition class, which represents a in-battle side
-condition.
+"""This module defines the VolatileStatus class, which represents a in-battle volatile
+status that can affect a mon.
 """
 # pyre-ignore-all-errors[45]
 from enum import Enum, unique, auto
