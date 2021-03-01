@@ -4,6 +4,7 @@
 """
 
 import asyncio
+import orjson
 import random
 
 from abc import ABC
@@ -24,6 +25,11 @@ from poke_env.environment.battle import Battle
 from poke_env.environment.double_battle import DoubleBattle
 from poke_env.environment.move import Move
 from poke_env.environment.pokemon import Pokemon
+from poke_env.player.battle_order import (
+    BattleOrder,
+    DefaultBattleOrder,
+    DoubleBattleOrder,
+)
 from poke_env.exceptions import ShowdownException
 from poke_env.exceptions import UnexpectedEffectException
 from poke_env.player.player_network_interface import PlayerNetwork
@@ -183,41 +189,35 @@ class Player(PlayerNetwork, ABC):
             async with self._battle_start_condition:
                 await self._battle_start_condition.wait()
 
-    async def _handle_battle_message(self, message: str) -> None:
+    async def _handle_battle_message(self, split_messages: List[List[str]]) -> None:
         """Handles a battle message.
         :param split_message: The received battle message.
         :type split_message: str
         """
         # Battle messages can be multiline
-        messages = [m.split("|") for m in message.split("\n")]
-        split_first_message = messages[0]
-
-        if len(messages) > 1 and len(messages[1]) > 1 and messages[1][1] == "init":
-            battle_info = split_first_message[0].split("-")
+        if (
+            len(split_messages) > 1
+            and len(split_messages[1]) > 1
+            and split_messages[1][1] == "init"
+        ):
+            battle_info = split_messages[0][0].split("-")
             battle = await self._create_battle(battle_info)
-            messages.pop(0)
+            split_messages.pop(0)
         else:
-            battle = await self._get_battle(split_first_message[0])
-            # battle = await self._get_battle(battle_info[2])
+            battle = await self._get_battle(split_messages[0][0])
 
-        if battle is None:
-            self.logger.critical("No battle found from message %s", message)
-            return
-        for split_message in messages[1:]:
+        for split_message in split_messages[1:]:
             if len(split_message) <= 1:
-                self.logger.debug(
-                    "Battle message too short; ignored: '%s'", "".join(split_message)
-                )
+                continue
             elif split_message[1] in self.MESSAGES_TO_IGNORE:
                 pass
             elif split_message[1] == "request":
                 if split_message[2]:
-                    request = self._json_decoder.decode(split_message[2])
-                    if request:
-                        battle._parse_request(request)
-                        if battle.move_on_next_request:
-                            await self._handle_battle_request(battle)
-                            battle.move_on_next_request = False
+                    request = orjson.loads(split_message[2])
+                    battle._parse_request(request)
+                    if battle.move_on_next_request:
+                        await self._handle_battle_request(battle)
+                        battle.move_on_next_request = False
             elif split_message[1] == "title":
                 player_1, player_2 = split_message[2].split(" vs. ")
                 battle.players = player_1, player_2
@@ -288,8 +288,6 @@ class Player(PlayerNetwork, ABC):
                     battle.move_on_next_request = True
                 else:
                     self.logger.critical("Unexpected error message: %s", split_message)
-            elif split_message[1] == "expire":
-                pass
             elif split_message[1] == "turn":
                 battle.end_turn(int(split_message[2]))
                 await self._handle_battle_request(battle)
@@ -384,7 +382,7 @@ class Player(PlayerNetwork, ABC):
         This order will result in the first legal order - according to showdown's
         ordering - being chosen.
         """
-        return DefaultBattleOrder()
+        return DefaultBattleOrder().message
 
     # Returns a list of all possible DoubleBattleOrders
     def get_all_doubles_moves(self, battle: DoubleBattle) -> List[DoubleBattleOrder]:

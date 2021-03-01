@@ -136,10 +136,10 @@ class AbstractBattle(ABC):
         self._won: Optional[bool] = None
 
         # In game battle state attributes
-        self._weather = None
-        self._fields = set()
-        self._side_conditions = set()
-        self._opponent_side_conditions = set()
+        self._weather = {}
+        self._fields: Dict[Field, int] = {}  # set()
+        self._side_conditions: Dict[SideCondition, int] = {}  # set()
+        self._opponent_side_conditions: Dict[SideCondition, int] = {}  # set()
 
         # Pokemon attributes
         self._team: Dict[str, Pokemon] = {}
@@ -427,7 +427,7 @@ class AbstractBattle(ABC):
         else:
             conditions = self.opponent_side_conditions
         condition = SideCondition.from_showdown_message(condition)
-        conditions.remove(condition)
+        conditions.pop(condition)
 
     def _side_start(self, side, condition):
         if side[:2] == self._player_role:
@@ -435,7 +435,8 @@ class AbstractBattle(ABC):
         else:
             conditions = self.opponent_side_conditions
         condition = SideCondition.from_showdown_message(condition)
-        conditions.add(condition)
+        if condition not in conditions:
+            conditions[condition] = self.turn
 
     def _swap(self, *args, **kwargs):
         self.logger.warning("swap method in Battle is not implemented")
