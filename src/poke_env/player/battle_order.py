@@ -100,7 +100,11 @@ class BattleOrder:
             if battle.showdown_target_to_mon(order.move_target):
                 potentials.append(order.move_target)
             elif order.move_target < 0:
+<<<<<<< HEAD
                 raise("get_affected_targets has been given an invalid order where we're targeting an ally... but there's no ally...?")
+=======
+                raise("get_affefcted_targets has been given an invalid order where we're targeting an ally... but there's no ally...?")
+>>>>>>> 578dd24988085a83c7afe55deb3e4e0f391be0ab
             else:
                 raise("targeting an empty slot with a one mon move... though its on the opponents side")
 

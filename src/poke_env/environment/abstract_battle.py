@@ -155,7 +155,7 @@ class AbstractBattle(ABC):
 
         :param identifier: The identifier to use to retrieve the pokemon.
         :type identifier: str
-        :param force_self_team: Wheter to force returning a Pokemon from the player's
+        :param force_self_team: Whether to force returning a Pokemon from the player's
             team. Defaults to False.
         :type details: str, optional
         :param details: Detailled information about the pokemon. Defaults to ''.
@@ -427,7 +427,7 @@ class AbstractBattle(ABC):
         else:
             conditions = self.opponent_side_conditions
         condition = SideCondition.from_showdown_message(condition)
-        conditions.pop(condition)
+        conditions.remove(condition)
 
     def _side_start(self, side, condition):
         if side[:2] == self._player_role:
