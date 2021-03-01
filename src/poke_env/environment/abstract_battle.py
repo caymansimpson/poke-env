@@ -427,7 +427,7 @@ class AbstractBattle(ABC):
         else:
             conditions = self.opponent_side_conditions
         condition = SideCondition.from_showdown_message(condition)
-        conditions.remove(condition)
+        conditions.pop(condition)
 
     def _side_start(self, side, condition):
         if side[:2] == self._player_role:
