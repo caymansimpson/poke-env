@@ -91,7 +91,6 @@ def test_effect_build():
             )
 
 
-# TODO: check all ability effects dont end
 def test_effect_end():
     furret = Pokemon(gen=9, species="furret")
     furret._effects = {
