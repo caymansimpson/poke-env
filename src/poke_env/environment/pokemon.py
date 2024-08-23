@@ -202,9 +202,11 @@ class Pokemon:
     def end_turn(self):
         if self._status == Status.TOX:
             self._status_counter += 1
-        for effect in self.effects:
+        for effect in list(self.effects.keys()):
             if effect.is_turn_countable:
                 self.effects[effect] += 1
+            if effect.ends_on_turn:
+                self.end_effect(effect.name)
 
     def faint(self):
         self._current_hp = 0
@@ -264,6 +266,16 @@ class Pokemon:
 
             self._moves = new_moves
 
+        # Handle silent effect ending
+        if Effect.GLAIVE_RUSH in self.effects:
+            self.end_effect("Glaive Rush")
+        if (
+            Effect.CHARGE in self.effects
+            and isinstance(move, Move)
+            and move.type == PokemonType.ELECTRIC
+        ):
+            self.end_effect("Charge")
+
     def prepare(self, move_id: str, target: Optional[Pokemon]):
         self.moved(move_id, use=False)
 
@@ -299,6 +311,10 @@ class Pokemon:
         if " " in hp_status:
             hp, status = hp_status.split(" ")
             self._status = Status[status.upper()]
+
+            # Handle silent effect ending
+            if self._status == Status.SLP and Effect.YAWN in self.effects:
+                self.end_effect("yawn")
         else:
             hp = hp_status
 
@@ -343,6 +359,10 @@ class Pokemon:
 
         if self._status == Status.TOX:
             self._status_counter = 0
+
+        for effect in self.effects:
+            if effect.ends_on_switch or effect.is_volatile_status:
+                self.end_effect(effect.name)
 
     def terastallize(self, type_: str):
         self._terastallized_type = PokemonType.from_name(type_)
