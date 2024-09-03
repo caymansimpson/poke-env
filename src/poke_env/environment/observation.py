@@ -22,9 +22,9 @@ class Observation:
     weather: Dict[Weather, int] = field(default_factory=dict)
     fields: Dict[Field, int] = field(default_factory=dict)
 
-    active_pokemon: Union[ObservedPokemon, List[Optional[ObservedPokemon]], None] = None
+    active_pokemon: Union[ObservedPokemon, List[ObservedPokemon], None] = None
     opponent_active_pokemon: Union[
-        ObservedPokemon, List[Optional[ObservedPokemon]], None
+        ObservedPokemon, List[ObservedPokemon], None
     ] = None
 
     # The player's team, so we can track states of mons throughout the battle
