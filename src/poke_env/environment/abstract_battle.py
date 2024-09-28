@@ -31,7 +31,6 @@ class AbstractBattle(ABC):
         "-nothing",
         "-ohko",
         "-resisted",
-        "-singlemove",
         "-supereffective",
         "-waiting",
         "-zbroken",
@@ -599,7 +598,11 @@ class AbstractBattle(ABC):
         elif split_message[1] == "-start":
             pokemon, effect = split_message[2:4]
             pokemon = self.get_pokemon(pokemon)
-            pokemon.start_effect(effect)
+            
+            if effect == "typechange":
+                pokemon.start_effect(effect, details=split_message[4])
+            else:
+                pokemon.start_effect(effect)
 
             if pokemon.is_dynamaxed:
                 if pokemon in set(self.team.values()) and self._dynamax_turn is None:
@@ -613,7 +616,9 @@ class AbstractBattle(ABC):
                     self.opponent_can_dynamax = False
         elif split_message[1] == "-activate":
             target, effect = split_message[2:4]
-            if target:
+            if target and effect == "move: Skill Swap":
+                self.get_pokemon(target).start_effect(effect, split_message[4:6])
+            else:
                 self.get_pokemon(target).start_effect(effect)
         elif split_message[1] == "-status":
             pokemon, status = split_message[2:4]
