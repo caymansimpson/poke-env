@@ -220,6 +220,7 @@ def test_battle_request_and_interactions(example_request):
 
     battle.parse_request(example_request)
     mon = battle.active_pokemon
+    assert mon.name == "Venusaur"
 
     battle.parse_message(["", "-boost", "p2: Venusaur", "atk", "4"])
     assert mon.boosts["atk"] == 4
@@ -324,7 +325,9 @@ def test_battle_request_and_interactions(example_request):
     for stat, boost in battle.opponent_active_pokemon.boosts.items():
         assert boost == -boosts_before_invertion[stat]
 
-    # TODO: test singlemove as well
+    battle.parse_message(["", "-singlemove", "p2: Necrozma", "Glaive Rush", "[silent]"])
+    assert Effect.GLAIVE_RUSH in battle.active_pokemon.effects
+
     battle.parse_message(["", "-singleturn", "p1: Tyranitar", "move: Rage Powder"])
     assert Effect.RAGE_POWDER in battle.opponent_active_pokemon.effects
     battle.end_turn(1)

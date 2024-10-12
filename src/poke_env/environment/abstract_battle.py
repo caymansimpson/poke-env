@@ -102,7 +102,7 @@ class AbstractBattle(ABC):
         "_rating",
         "_reconnected",
         "_replay_data",
-        "_rqid",
+        "_last_request",
         "rules",
         "_reviving",
         "_save_replays",
@@ -158,7 +158,7 @@ class AbstractBattle(ABC):
         # Battle state attributes
         self._dynamax_turn: Optional[int] = None
         self._finished: bool = False
-        self._rqid = 0
+        self._last_request: Dict[str, Any] = {}
         self.rules: List[str] = []
         self._turn: int = 0
         self._opponent_can_terrastallize: bool = True
@@ -218,6 +218,7 @@ class AbstractBattle(ABC):
             return self._opponent_team[identifier]
 
         player_role = identifier[:2]
+        name = identifier[3:].strip()
         is_mine = player_role == self._player_role
 
         if is_mine or force_self_team:
@@ -237,12 +238,12 @@ class AbstractBattle(ABC):
             )
 
         if request:
-            team[identifier] = Pokemon(request_pokemon=request, gen=self._data.gen)
+            team[identifier] = Pokemon(request_pokemon=request, name=name, gen=self._data.gen)
         elif details:
-            team[identifier] = Pokemon(details=details, gen=self._data.gen)
+            team[identifier] = Pokemon(details=details, name=name, gen=self._data.gen)
         else:
             species = identifier[4:]
-            team[identifier] = Pokemon(species=species, gen=self._data.gen)
+            team[identifier] = Pokemon(species=species, name=name, gen=self._data.gen)
 
         return team[identifier]
 
@@ -851,6 +852,7 @@ class AbstractBattle(ABC):
 
     def _register_teampreview_pokemon(self, player: str, details: str):
         if player != self._player_role:
+            # TODO: register name
             mon = Pokemon(details=details, gen=self._data.gen)
             self._teampreview_opponent_team.add(mon)
 
@@ -955,6 +957,16 @@ class AbstractBattle(ABC):
     @abstractmethod
     def can_tera(self) -> Any:
         pass
+
+    @property
+    def current_observation(self) -> Observation:
+        """
+        :return: The current observation of the current turn in the Battle.
+            Most useful for when a force_switch triggers in the middle of a
+            turn, and our player has to return an action. 
+        :rtype: Observation
+        """
+        return self._current_observation
 
     @property
     def dynamax_turns_left(self) -> Optional[int]:
@@ -1182,14 +1194,15 @@ class AbstractBattle(ABC):
         return self._opponent_rating
 
     @property
-    def rqid(self) -> int:
+    def last_request(self) -> Dict[str, Any]:
         """
-        Should not be used.
+        The last request received from the server. This allows players to track
+            rqid and also maintain parallel battle copies for search/inference
 
-        :return: The last request's rqid.
+        :return: The last request.
         :rtype: int
         """
-        return self._rqid
+        return self._last_request
 
     @property
     def side_conditions(self) -> Dict[SideCondition, int]:

@@ -708,6 +708,9 @@ _ENDS_ON_MOVE_EFFECTS = {
     Effect.GLAIVE_RUSH,
     Effect.CHARGE,
     Effect.DANCER,
+    Effect.GRUDGE,
+    Effect.DESTINY_BOND,
+    Effect.RAGE,
 }
 
 _ENDS_ON_SWITCH_EFFECTS = {

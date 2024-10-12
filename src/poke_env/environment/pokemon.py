@@ -26,6 +26,7 @@ class Pokemon:
         "_first_turn",
         "_gender",
         "_heightm",
+        "_name",
         "_item",
         "_last_details",
         "_last_request",
@@ -57,6 +58,7 @@ class Pokemon:
         gen: int,
         *,
         species: Optional[str] = None,
+        name: Optional[str] = None,
         request_pokemon: Optional[Dict[str, Any]] = None,
         details: Optional[str] = None,
         teambuilder: Optional[TeambuilderPokemon] = None,
@@ -80,10 +82,10 @@ class Pokemon:
         self._level: int = 100
         self._max_hp: Optional[int] = 0
         self._moves: Dict[str, Move] = {}
+        self._name: Optional[str] = None
         self._shiny: Optional[bool] = False
 
         # Battle related attributes
-
         self._active: bool = False
         self._boosts: Dict[str, int] = {
             "accuracy": 0,
@@ -120,6 +122,7 @@ class Pokemon:
         self._temporary_ability: Optional[str] = None
         self._temporary_types: List[PokemonType] = []
 
+        # Pokemon creation from Showdown    
         if request_pokemon:
             self.update_from_request(request_pokemon)
         elif details:
@@ -128,6 +131,10 @@ class Pokemon:
             self._update_from_pokedex(species)
         elif teambuilder:
             self._update_from_teambuilder(teambuilder)
+
+        if name is not None:
+            self._name = name
+        
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -503,6 +510,7 @@ class Pokemon:
         condition = request_pokemon["condition"]
         self.set_hp_status(condition, store=True)
 
+        self._name = request_pokemon["ident"][4:]
         self._item = request_pokemon["item"]
 
         details = request_pokemon["details"]
@@ -526,10 +534,14 @@ class Pokemon:
                 self._stats[stat] = request_pokemon["stats"][stat]
 
     def _update_from_teambuilder(self, tb: TeambuilderPokemon):
-        if tb.nickname and not tb.species:
+        if tb.nickname is not None and tb.species is None:
             self._update_from_pokedex(tb.nickname)
-        elif tb.nickname and tb.species:
+        elif tb.nickname is not None and tb.species is not None:
             self._update_from_pokedex(tb.species)
+            self._name = tb.nickname
+        else:
+            raise ValueError("TeambuilderPokemon must have either a nickname or species", tb)
+
         if tb.level:
             self._level = tb.level
         self._ability = to_id_str(tb.ability)
@@ -544,10 +556,11 @@ class Pokemon:
             move = Move(Move.retrieve_id(move_str), gen=self._data.gen)
             self._moves[move.id] = move
 
-        if tb.level and tb.nature:
+        if tb.level:
+            nature = tb.nature.lower() if tb.nature else "serious"
             self._stats = {}
             stats = compute_raw_stats(
-                self._species, tb.evs, tb.ivs, tb.level, tb.nature.lower(), self._data
+                self._species, tb.evs, tb.ivs, tb.level, nature, self._data
             )
             for stat, val in zip(["hp", "atk", "def", "spa", "spd", "spe"], stats):
                 self._stats[stat] = val
@@ -682,9 +695,7 @@ class Pokemon:
         :rtype: str
         """
         dex_entry = self._data.pokedex[self._species]
-        if "baseSpecies" in dex_entry:
-            return to_id_str(dex_entry["baseSpecies"])
-        return self._species
+        return to_id_str(dex_entry["baseSpecies"])
 
     @property
     def base_stats(self) -> Dict[str, int]:
@@ -836,11 +847,19 @@ class Pokemon:
     @property
     def name(self) -> str:
         """
-        :return: A string of the pokemon's name, as it appears in Showdown
-        :rtype: name
+        :return: The pokemon's name, which can be used to create Showdown's
+            identifier.
+        :rtype: str
         """
-        dex_entry = self._data.pokedex[self._species]
-        return dex_entry["name"]
+        if self._name is not None:
+            return self._name
+        else:
+            dex_entry = self._data.pokedex[self._species]
+            if dex_entry["baseSpecies"].islower():
+                return dex_entry["name"]
+            else:
+                return dex_entry["baseSpecies"]
+                
 
     @property
     def pokeball(self) -> Optional[str]:
