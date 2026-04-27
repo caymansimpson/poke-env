@@ -378,6 +378,43 @@ def test_teambuilder_without_ability_in_gen2():
     assert mon.ability is None
 
 
+def test_update_from_request_reorders_moves_to_request_order():
+    mon = Pokemon(species="zamazentacrowned", gen=9)
+    mon._moves._base_moves = {
+        "protect": Move("protect", gen=9),
+        "bodypress": Move("bodypress", gen=9),
+        "behemothbash": Move("behemothbash", gen=9),
+        "irondefense": Move("irondefense", gen=9),
+    }
+
+    request_pokemon = {
+        "ident": "p1: Zamazenta",
+        "details": "Zamazenta-Crowned, L50",
+        "condition": "199/199",
+        "active": True,
+        "baseAbility": "dauntlessshield",
+        "item": "rustedshield",
+        "moves": ["behemothbash", "bodypress", "protect", "irondefense"],
+        "stats": {
+            "hp": 199,
+            "atk": 150,
+            "def": 167,
+            "spa": 90,
+            "spd": 140,
+            "spe": 148,
+        },
+    }
+
+    mon.update_from_request(request_pokemon)
+
+    assert list(mon.moves.keys()) == [
+        "behemothbash",
+        "bodypress",
+        "protect",
+        "irondefense",
+    ]
+
+
 def test_name(example_doubles_request):
     charizard = Pokemon(species="charizard", gen=8)
     assert charizard.name == "Charizard"

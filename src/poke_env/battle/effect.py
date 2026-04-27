@@ -263,6 +263,9 @@ class Effect(Enum):
         try:
             return Effect[message]
         except KeyError:
+            compact_message = message.replace("_", "")
+            if compact_message in _FROM_DATA:
+                return _FROM_DATA[compact_message]
             logging.getLogger("poke-env").warning(
                 "Unexpected effect '%s' received. Effect.UNKNOWN will be used instead. "
                 "If this is unexpected, please open an issue at "

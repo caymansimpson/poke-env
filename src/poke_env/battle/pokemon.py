@@ -726,6 +726,12 @@ class Pokemon:
 
         self._last_request = request_pokemon
 
+        if request_pokemon.get("commanding"):
+            if Effect.COMMANDER not in self.effects:
+                self.start_effect("Commander")
+        elif "commanding" in request_pokemon and Effect.COMMANDER in self.effects:
+            self.end_effect("Commander")
+
         condition = request_pokemon["condition"]
         self.set_hp_status(condition, store=True)
 
@@ -737,6 +743,17 @@ class Pokemon:
 
         for move in request_pokemon["moves"]:
             self._add_move(move)
+
+        requested_move_ids = [
+            Move.retrieve_id(move_id) for move_id in request_pokemon["moves"]
+        ]
+        ordered_moves = {
+            move_id: self.base_moves[move_id]
+            for move_id in requested_move_ids
+            if move_id in self.base_moves
+        }
+        if ordered_moves:
+            self._moves._base_moves = ordered_moves
 
         if "stats" in request_pokemon:
             for stat in request_pokemon["stats"]:
