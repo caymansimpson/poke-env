@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from poke_env.battle.effect import Effect
 from poke_env.battle.field import Field
 from poke_env.battle.move import Move
+from poke_env.battle.observation import Observation
 from poke_env.battle.pokemon import Pokemon
 from poke_env.battle.pokemon_type import PokemonType
 from poke_env.battle.side_condition import STACKABLE_CONDITIONS, SideCondition
@@ -124,6 +125,8 @@ class AbstractBattle(ABC):
         "_weather",
         "_won",
         "logger",
+        "_observations",
+        "_current_observation",
     )
 
     def __init__(
@@ -188,6 +191,10 @@ class AbstractBattle(ABC):
         self._team: Dict[str, Pokemon] = {}
         self._teambuilder_team: list[TeambuilderPokemon] | None = None
         self._opponent_team: Dict[str, Pokemon] = {}
+
+        # Observation tracking
+        self._observations: Dict[int, Observation] = {}
+        self._current_observation: Observation = Observation()
 
     def get_pokemon(
         self,
@@ -563,6 +570,7 @@ class AbstractBattle(ABC):
         return True
 
     def parse_message(self, split_message: List[str]):
+        self._current_observation.events.append(split_message)
         self._replay_data.append(split_message[:])
 
         # We copy because we directly modify split_message in poke-env; this is to
@@ -743,6 +751,8 @@ class AbstractBattle(ABC):
             pokemon, _ = event[2:4]
             self.get_pokemon(pokemon).cant_move()
         elif event[1] == "turn":
+            self._observations[self._turn] = self._current_observation
+            self._current_observation = Observation()
             self.end_turn(int(event[2]))
         elif event[1] == "-heal":
             pokemon, hp_status = event[2:4]
@@ -1743,6 +1753,22 @@ class AbstractBattle(ABC):
         :type turn: int
         """
         self._turn = turn
+
+    @property
+    def observations(self) -> Dict[int, Observation]:
+        """
+        :return: Past turn observations keyed by turn number.
+        :rtype: Dict[int, Observation]
+        """
+        return self._observations
+
+    @property
+    def current_observation(self) -> Observation:
+        """
+        :return: The observation being built for the current turn.
+        :rtype: Observation
+        """
+        return self._current_observation
 
     @property
     def used_dynamax(self) -> bool:
